@@ -6,6 +6,7 @@
 <body>
     <div id="svgContainer" style="border: 1px solid black; width: 70vw; height: 70vh; max-width: 70vh; max-height: 70vw; padding: 10px;"></div>
     <button id="clearButton">Clear</button>
+    <button id="toggleGridButton">Toggle Grid</button>
     <label for="rowSlider">Rows/Columns:</label>
     <input id="rowSlider" type="range" min="2" max="10" value="6">
     <label id="rows">6</label>
@@ -16,6 +17,9 @@
     <input type="color" id="primaryColor" value="#ff0000">
     <label for="secondaryColor">Triangle Color:</label>
     <input type="color" id="secondaryColor" value="#00ff00">
+
+    <br>
+    <button id="saveButton" onclick="saveSVG()">Save SVG</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.draggable.min.js"></script>
@@ -133,6 +137,59 @@
             createGrid();
         }
 
+        // Function to toggle grid visibility
+        function toggleGrid() {
+            const gridSquares = document.getElementsByClassName('grid-square');
+            for (let i = 0; i < gridSquares.length; i++) {
+                const square = gridSquares[i];
+                // Toggle stroke opacity
+                const currentOpacity = square.style.strokeOpacity;
+                square.style.strokeOpacity = currentOpacity === '0' ? '1' : '0';
+            }
+
+            // Toggle the vertices and hit circles
+            const gridVertices = document.getElementsByClassName('grid-vertex');
+            for (let i = 0; i < gridVertices.length; i++) {
+                const vertex = gridVertices[i];
+                const currentOpacity = vertex.style.opacity;
+                vertex.style.opacity = currentOpacity === '0' ? '1' : '0';
+            }
+        }
+
+        // Function to save squares (without stroke) and triangles
+        // to a SVG file
+        function saveSVG() {
+            removeStroke();
+            removeVertices();
+            const svg = document.getElementById('svgContainer').innerHTML;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quilt-block.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            clearGrid();
+        }
+
+        // Function to remove stroke from squares
+        function removeStroke() {
+            const gridSquares = document.getElementsByClassName('grid-square');
+            for (let i = 0; i < gridSquares.length; i++) {
+                const square = gridSquares[i];
+                square.style.stroke = 'none';
+            }
+        }
+
+        // Function to remove vertices and hit circles
+        function removeVertices() {
+            const gridVertices = Array.from(document.getElementsByClassName('grid-vertex'));
+            gridVertices.forEach(vertex => vertex.remove());
+
+            const gridVertexHits = Array.from(document.getElementsByClassName('grid-vertex-hit'));
+            gridVertexHits.forEach(vertexHit => vertexHit.remove());
+        }
+
         // Function to reset slider
         function resetInputs() {
             document.getElementById('rowSlider').value = 6;
@@ -151,7 +208,7 @@
         // Add event listener to the clear button
         document.getElementById('clearButton').addEventListener('click', (e) => { 
             clearGrid();
-            r//esetInputs();
+            // resetInputs();
             });
         
         // Add event listener to the row slider
@@ -177,6 +234,11 @@
         // Add event listener to the secondary color picker
         document.getElementById('secondaryColor').addEventListener('input', (e) => {
             secondaryColor = e.target.value;
+        });
+
+        // Add event listener to the toggle grid button
+        document.getElementById('toggleGridButton').addEventListener('click', (e) => {
+            toggleGrid();
         });
 
         // On page refresh
