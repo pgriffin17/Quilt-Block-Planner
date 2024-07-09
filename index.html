@@ -1,267 +1,327 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Quilt Block Planner</title>
-</head>
-<body>
-    <div id="svgContainer" style="border: 1px solid black; width: 70vw; height: 70vh; max-width: 70vh; max-height: 70vw; padding: 10px;"></div>
+  </head>
+  <body>
+    <div
+      id="svgContainer"
+      style="
+        border: 1px solid black;
+        width: 70vw;
+        height: 70vh;
+        max-width: 70vh;
+        max-height: 70vw;
+        padding: 10px;
+      "
+    ></div>
     <button id="clearButton">Clear</button>
     <!-- toggle checkbox for triangle removal -->
     <label for="triangleRemoval">Remove Triangle</label>
-    <input type="checkbox" id="triangleRemoval" name="triangleRemoval" value="triangleRemoval">
+    <input
+      type="checkbox"
+      id="triangleRemoval"
+      name="triangleRemoval"
+      value="triangleRemoval"
+    />
     <button id="toggleGridButton">Toggle Grid</button>
     <label for="rowSlider">Rows/Columns:</label>
-    <input id="rowSlider" type="range" min="2" max="10" value="6">
+    <input id="rowSlider" type="range" min="2" max="10" value="6" />
     <label id="rows">6</label>
 
     <!-- Add color pickers -->
-    <br>
+    <br />
     <label for="primaryColor">Square Color:</label>
-    <input type="color" id="primaryColor" value="#ff0000">
+    <input type="color" id="primaryColor" value="#ff0000" />
     <label for="secondaryColor">Triangle Color:</label>
-    <input type="color" id="secondaryColor" value="#00ff00">
+    <input type="color" id="secondaryColor" value="#00ff00" />
 
-    <br>
+    <br />
     <button id="saveButton" onclick="saveSVG()">Save SVG</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.draggable.min.js"></script>
     <script>
-        // Initialize the SVG.js drawing
-        const draw = SVG().addTo('#svgContainer').viewbox("-5 -5 520% 520%");
-    
-        const gridSize = 50;
-        let rows = 6;
-        let cols = 6;
-        const vertexRadius = 5;
-        const vertexProximity = 15; // Distance to consider as near a vertex
-    
-        let primaryColor = '#ff0000';
-        let secondaryColor = '#00ff00';
-        const vertexDefaultColor = '#000000';
-        const vertexHoverColor = '#00cccc';
-        const vertexSelectedColor = '#0000ff';
-    
-        let selectedVertices = [];
-        let vertices = [];
-    
-        // Function to create the grid
-        function createGrid() {
+      // Initialize the SVG.js drawing
+      const draw = SVG().addTo("#svgContainer").viewbox("-5, -5, 510%, 510%");
+      // .viewbox("-5 -5 520% 520%")
+
+      const gridSize = 50;
+      let rows = 6;
+      let cols = 6;
+      const vertexRadius = 5;
+      const vertexProximity = 15; // Distance to consider as near a vertex
+
+      let primaryColor = "#ff0000";
+      let secondaryColor = "#00ff00";
+      const vertexDefaultColor = "#000000";
+      const vertexHoverColor = "#00cccc";
+      const vertexSelectedColor = "#0000ff";
+
+      let selectedVertices = [];
+      let vertices = [];
+
+      // Function to create the grid
+      function createGrid() {
         for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
+          for (let col = 0; col < cols; col++) {
             // Create the square
-            const square = draw.rect(gridSize, gridSize)
-                .attr({ fill: '#ffffff', stroke: '#000000' })
-                .move(col * gridSize, row * gridSize)
-                .addClass('grid-square')
-                .click(() => handleSquareClick(square));
-    
+            const square = draw
+              .rect(gridSize, gridSize)
+              .attr({ fill: "#ffffff", stroke: "#000000" })
+              .move(col * gridSize, row * gridSize)
+              .addClass("grid-square")
+              .click(() => handleSquareClick(square));
+
             // Create the vertices
             createVertex(col * gridSize, row * gridSize);
-            if (col === cols - 1) createVertex((col + 1) * gridSize, row * gridSize);
-            if (row === rows - 1) createVertex(col * gridSize, (row + 1) * gridSize);
-            if (col === cols - 1 && row === rows - 1) createVertex((col + 1) * gridSize, (row + 1) * gridSize);
-            }
+            if (col === cols - 1)
+              createVertex((col + 1) * gridSize, row * gridSize);
+            if (row === rows - 1)
+              createVertex(col * gridSize, (row + 1) * gridSize);
+            if (col === cols - 1 && row === rows - 1)
+              createVertex((col + 1) * gridSize, (row + 1) * gridSize);
+          }
         }
-        }
-    
-        // Function to create a vertex
-        function createVertex(x, y) {
+      }
+
+      // Function to get SVG bounding box
+      function getSVGBox() {
+        const svgElem = document.getElementById("svgContainer").getBBox();
+        return bbox;
+      }
+
+      // Function to update SVG size
+      function updateSVGSize() {
+        const container = document.getElementById("svgContainer");
+        const { width, height } = container.getBoundingClientRect();
+        console.log("I am resizing!");
+        console.log(width, height);
+        console.log(draw.rbox());
+        xwidth = cols * gridSize + 30;
+        yheight = rows * gridSize + 30;
+        draw
+          .size(width, height)
+          .viewbox("-5, -5, " + xwidth + "%, " + yheight + "%");
+      }
+
+      // Update SVG size on window resize
+      window.addEventListener("resize", updateSVGSize);
+
+      // Initial update of SVG size
+      updateSVGSize();
+
+      // Function to create a vertex
+      function createVertex(x, y) {
         // Create a group for the vertex and hit circle
         const group = draw.group();
-    
+
         // Create the visible vertex dot
-        const vertex = group.circle(vertexRadius * 2)
-            .attr({ fill: vertexDefaultColor })
-            .center(x, y)
-            .addClass('grid-vertex');
-    
+        const vertex = group
+          .circle(vertexRadius * 2)
+          .attr({ fill: vertexDefaultColor })
+          .center(x, y)
+          .addClass("grid-vertex");
+
         // Create transparent circle for larger hit area
-        const hitCircle = group.circle(vertexProximity * 2)
-            .attr({ fill: '#ffffff', opacity: 0 }) // transparent fill
-            .center(x, y)
-            .addClass('grid-vertex-hit')
-            .mouseover(() => {hitCircle.attr({ cursor: 'pointer' });
-            vertex.fill(vertexHoverColor);})
-            .mouseout(() => {
-                if (vertex.attr('fill') !== vertexSelectedColor) {
-                    vertex.fill(vertexDefaultColor);
-                }})
-            .click(() => handleVertexClick(group));
-    
+        const hitCircle = group
+          .circle(vertexProximity * 2)
+          .attr({ fill: "#ffffff", opacity: 0 }) // transparent fill
+          .center(x, y)
+          .addClass("grid-vertex-hit")
+          .mouseover(() => {
+            hitCircle.attr({ cursor: "pointer" });
+            vertex.fill(vertexHoverColor);
+          })
+          .mouseout(() => {
+            if (vertex.attr("fill") !== vertexSelectedColor) {
+              vertex.fill(vertexDefaultColor);
+            }
+          })
+          .click(() => handleVertexClick(group));
+
         vertices.push(vertex);
-        }
-    
-        // Function to handle square click
-        function handleSquareClick(square) {
-        const currentColor = square.attr('fill');
-        const newColor = currentColor === '#ffffff' ? primaryColor : '#ffffff';
+      }
+
+      // Function to handle square click
+      function handleSquareClick(square) {
+        const currentColor = square.attr("fill");
+        const newColor = currentColor === "#ffffff" ? primaryColor : "#ffffff";
         square.fill(newColor);
-    
+
         // Clear selected vertices if any
         clearSelectedVertices();
-        }
-    
-        // Function to handle vertex click
-        function handleVertexClick(group) {
+      }
+
+      // Function to handle vertex click
+      function handleVertexClick(group) {
         const vertex = group.get(0);
-    
+
         if (selectedVertices.includes(vertex)) {
-            vertex.fill(vertexDefaultColor);
-            selectedVertices = selectedVertices.filter(v => v !== vertex);
+          vertex.fill(vertexDefaultColor);
+          selectedVertices = selectedVertices.filter((v) => v !== vertex);
         } else {
-            vertex.fill(vertexSelectedColor);
-            selectedVertices.push(vertex);
-    
-            if (selectedVertices.length === 3) {
+          vertex.fill(vertexSelectedColor);
+          selectedVertices.push(vertex);
+
+          if (selectedVertices.length === 3) {
             drawTriangle(selectedVertices);
             clearSelectedVertices();
-            }
+          }
         }
-        }
-    
-        // Function to clear selected vertices
-        function clearSelectedVertices() {
-        selectedVertices.forEach(v => v.fill(vertexDefaultColor));
+      }
+
+      // Function to clear selected vertices
+      function clearSelectedVertices() {
+        selectedVertices.forEach((v) => v.fill(vertexDefaultColor));
         selectedVertices = [];
-        }
-    
-        // Function to draw a triangle
-        function drawTriangle(vertices) {
-        const points = vertices.map(v => [v.cx(), v.cy()]).flat();
+      }
+
+      // Function to draw a triangle
+      function drawTriangle(vertices) {
+        const points = vertices.map((v) => [v.cx(), v.cy()]).flat();
         const triangle = draw.polygon(points).fill(secondaryColor);
         triangle.click(() => handleTriangleClick(triangle));
+      }
+
+      // Function to handle triangle click
+      function handleTriangleClick(triangle) {
+        if (document.getElementById("triangleRemoval").checked) {
+          triangle.remove();
+        } else {
+          triangle.fill(secondaryColor);
         }
+      }
 
-        // Function to handle triangle click
-        function handleTriangleClick(triangle) {
-            if (document.getElementById('triangleRemoval').checked) {
-                triangle.remove();
-            } else {
-                triangle.fill(secondaryColor);
-            }
-        }
-    
-        // Function to clear the grid
-        function clearGrid() {
-            draw.clear();
-            selectedVertices = [];
-            vertices = [];
-            createGrid();
-        }
-
-        // Function to toggle grid visibility
-        function toggleGrid() {
-            const gridSquares = document.getElementsByClassName('grid-square');
-            for (let i = 0; i < gridSquares.length; i++) {
-                const square = gridSquares[i];
-                // Toggle stroke opacity
-                const currentOpacity = square.style.strokeOpacity;
-                square.style.strokeOpacity = currentOpacity === '0' ? '1' : '0';
-            }
-
-            // Toggle the vertices and hit circles
-            const gridVertices = document.getElementsByClassName('grid-vertex');
-            for (let i = 0; i < gridVertices.length; i++) {
-                const vertex = gridVertices[i];
-                const currentOpacity = vertex.style.opacity;
-                vertex.style.opacity = currentOpacity === '0' ? '1' : '0';
-            }
-        }
-
-        // Function to save squares (without stroke) and triangles
-        // to a SVG file
-        function saveSVG() {
-            removeStroke();
-            removeVertices();
-            const svg = document.getElementById('svgContainer').innerHTML;
-            const blob = new Blob([svg], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'quilt-block.svg';
-            a.click();
-            URL.revokeObjectURL(url);
-            clearGrid();
-        }
-
-        // Function to remove stroke from squares
-        function removeStroke() {
-            const gridSquares = document.getElementsByClassName('grid-square');
-            for (let i = 0; i < gridSquares.length; i++) {
-                const square = gridSquares[i];
-                square.style.stroke = 'none';
-            }
-        }
-
-        // Function to remove vertices and hit circles
-        function removeVertices() {
-            const gridVertices = Array.from(document.getElementsByClassName('grid-vertex'));
-            gridVertices.forEach(vertex => vertex.remove());
-
-            const gridVertexHits = Array.from(document.getElementsByClassName('grid-vertex-hit'));
-            gridVertexHits.forEach(vertexHit => vertexHit.remove());
-        }
-
-        // Function to reset slider
-        function resetInputs() {
-            document.getElementById('rowSlider').value = 6;
-            document.getElementById('primaryColor').value = '#ff0000';
-            document.getElementById('secondaryColor').value = '#00ff00';
-        }
-
-        // Update rows text
-        document.getElementById('rowSlider').addEventListener('input', (e) => {
-            document.getElementById('rows').innerText = e.target.value;
-        });
-    
-        // Initialize the grid
+      // Function to clear the grid
+      function clearGrid() {
+        draw.clear();
+        selectedVertices = [];
+        vertices = [];
         createGrid();
-    
-        // Add event listener to the clear button
-        document.getElementById('clearButton').addEventListener('click', (e) => { 
-            clearGrid();
-            // resetInputs();
-            });
-        
-        // Add event listener to the row slider
-        document.getElementById('rowSlider').addEventListener('input', (e) => {
-            rows = e.target.value;
-            cols = e.target.value;
-            clearGrid();
-            createGrid();
+      }
+
+      // Function to toggle grid visibility
+      function toggleGrid() {
+        const gridSquares = document.getElementsByClassName("grid-square");
+        for (let i = 0; i < gridSquares.length; i++) {
+          const square = gridSquares[i];
+          // Toggle stroke opacity
+          const currentOpacity = square.style.strokeOpacity;
+          square.style.strokeOpacity = currentOpacity === "0" ? "1" : "0";
+        }
+
+        // Toggle the vertices and hit circles
+        const gridVertices = document.getElementsByClassName("grid-vertex");
+        for (let i = 0; i < gridVertices.length; i++) {
+          const vertex = gridVertices[i];
+          const currentOpacity = vertex.style.opacity;
+          vertex.style.opacity = currentOpacity === "0" ? "1" : "0";
+        }
+      }
+
+      // Function to save squares (without stroke) and triangles
+      // to a SVG file
+      function saveSVG() {
+        removeStroke();
+        removeVertices();
+        const svg = document.getElementById("svgContainer").innerHTML;
+        const blob = new Blob([svg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "quilt-block.svg";
+        a.click();
+        URL.revokeObjectURL(url);
+        clearGrid();
+      }
+
+      // Function to remove stroke from squares
+      function removeStroke() {
+        const gridSquares = document.getElementsByClassName("grid-square");
+        for (let i = 0; i < gridSquares.length; i++) {
+          const square = gridSquares[i];
+          square.style.stroke = "none";
+        }
+      }
+
+      // Function to remove vertices and hit circles
+      function removeVertices() {
+        const gridVertices = Array.from(
+          document.getElementsByClassName("grid-vertex")
+        );
+        gridVertices.forEach((vertex) => vertex.remove());
+
+        const gridVertexHits = Array.from(
+          document.getElementsByClassName("grid-vertex-hit")
+        );
+        gridVertexHits.forEach((vertexHit) => vertexHit.remove());
+      }
+
+      // Function to reset slider
+      function resetInputs() {
+        document.getElementById("rowSlider").value = 6;
+        document.getElementById("primaryColor").value = "#ff0000";
+        document.getElementById("secondaryColor").value = "#00ff00";
+      }
+
+      // Update rows text
+      document.getElementById("rowSlider").addEventListener("input", (e) => {
+        document.getElementById("rows").innerText = e.target.value;
+      });
+
+      // Initialize the grid
+      createGrid();
+
+      // Add event listener to the clear button
+      document.getElementById("clearButton").addEventListener("click", (e) => {
+        clearGrid();
+        // resetInputs();
+      });
+
+      // Add event listener to the row slider
+      document.getElementById("rowSlider").addEventListener("input", (e) => {
+        rows = e.target.value;
+        cols = e.target.value;
+        clearGrid();
+        createGrid();
+        updateSVGSize();
+      });
+
+      // // Add event listener to the column slider
+      // document.getElementById('colSlider').addEventListener('input', (e) => {
+      //     cols = e.target.value;
+      //     clearGrid();
+      //     createGrid();
+      // });
+
+      // Add event listener to the primary color picker
+      document.getElementById("primaryColor").addEventListener("input", (e) => {
+        primaryColor = e.target.value;
+      });
+
+      // Add event listener to the secondary color picker
+      document
+        .getElementById("secondaryColor")
+        .addEventListener("input", (e) => {
+          secondaryColor = e.target.value;
         });
 
-        // // Add event listener to the column slider
-        // document.getElementById('colSlider').addEventListener('input', (e) => {
-        //     cols = e.target.value;
-        //     clearGrid();
-        //     createGrid();
-        // });
-
-        // Add event listener to the primary color picker
-        document.getElementById('primaryColor').addEventListener('input', (e) => {
-            primaryColor = e.target.value;
+      // Add event listener to the toggle grid button
+      document
+        .getElementById("toggleGridButton")
+        .addEventListener("click", (e) => {
+          toggleGrid();
         });
 
-        // Add event listener to the secondary color picker
-        document.getElementById('secondaryColor').addEventListener('input', (e) => {
-            secondaryColor = e.target.value;
-        });
-
-        // Add event listener to the toggle grid button
-        document.getElementById('toggleGridButton').addEventListener('click', (e) => {
-            toggleGrid();
-        });
-
-        // On page refresh
-        window.onload = function() {
-            resetInputs();
-        };
+      // On page refresh
+      window.onload = function () {
+        resetInputs();
+      };
     </script>
 
     <style>
-        /* .grid-square {
+      /* .grid-square {
             cursor: pointer;
         }
     
@@ -273,17 +333,15 @@
             cursor: pointer;
         } */
 
-        /* Add some styling to the color pickers */
-        input[type="color"] {
-            margin: 10px;
-        }
+      /* Add some styling to the color pickers */
+      input[type="color"] {
+        margin: 10px;
+      }
 
-        /* On hover of grid-vertex-hit, change color of sibling grid-vertex
+      /* On hover of grid-vertex-hit, change color of sibling grid-vertex
         .grid-vertex-hit:hover + .grid-vertex {
             fill: #00cccc;
         } */
     </style>
-</body>
+  </body>
 </html>
-
-
