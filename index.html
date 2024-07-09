@@ -95,9 +95,6 @@
       function updateSVGSize() {
         const container = document.getElementById("svgContainer");
         const { width, height } = container.getBoundingClientRect();
-        console.log("I am resizing!");
-        console.log(width, height);
-        console.log(draw.rbox());
         xwidth = cols * gridSize + 30;
         yheight = rows * gridSize + 30;
         draw
