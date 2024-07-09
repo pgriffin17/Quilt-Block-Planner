@@ -6,6 +6,9 @@
 <body>
     <div id="svgContainer" style="border: 1px solid black; width: 70vw; height: 70vh; max-width: 70vh; max-height: 70vw; padding: 10px;"></div>
     <button id="clearButton">Clear</button>
+    <!-- toggle checkbox for triangle removal -->
+    <label for="triangleRemoval">Remove Triangle</label>
+    <input type="checkbox" id="triangleRemoval" name="triangleRemoval" value="triangleRemoval">
     <button id="toggleGridButton">Toggle Grid</button>
     <label for="rowSlider">Rows/Columns:</label>
     <input id="rowSlider" type="range" min="2" max="10" value="6">
@@ -126,7 +129,17 @@
         // Function to draw a triangle
         function drawTriangle(vertices) {
         const points = vertices.map(v => [v.cx(), v.cy()]).flat();
-        draw.polygon(points).fill(secondaryColor);
+        const triangle = draw.polygon(points).fill(secondaryColor);
+        triangle.click(() => handleTriangleClick(triangle));
+        }
+
+        // Function to handle triangle click
+        function handleTriangleClick(triangle) {
+            if (document.getElementById('triangleRemoval').checked) {
+                triangle.remove();
+            } else {
+                triangle.fill(secondaryColor);
+            }
         }
     
         // Function to clear the grid
