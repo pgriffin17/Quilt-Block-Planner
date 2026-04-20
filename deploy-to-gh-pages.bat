@@ -16,9 +16,9 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-REM Check if we're in a git repo
-if not exist .git (
-    echo ❌ Error: Not in a git repository
+REM Check if backend/public exists
+if not exist backend\public (
+    echo ❌ Error: backend\public directory not found
     exit /b 1
 )
 
@@ -41,33 +41,22 @@ REM Switch to gh-pages
 echo 🔄 Switching to gh-pages branch...
 git checkout gh-pages
 
-REM Clear old files
-echo 🗑️  Clearing old files...
-for /d %%d in (*) do (
-    if not "%%d"==".git" (
-        rmdir /s /q "%%d"
-    )
-)
-for %%f in (*) do (
-    if not "%%f"==".gitignore" (
-        del "%%f"
-    )
-)
-
-REM Copy new files from backend/public
+REM Copy files from backend/public (xcopy preserves existing files)
 echo 📋 Copying files from backend/public/...
-xcopy /E /I /Y "backend\public\*" "."
+xcopy /E /I /Y "%CURRENT_BRANCH%\backend\public\*" "."
 
-REM Create .gitignore if it doesn't exist
-if not exist .gitignore (
-    (
-        echo node_modules/
-        echo .env
-        echo .env.local
-        echo *.log
-        echo .DS_Store
-    ) > .gitignore
-)
+REM Create .gitignore
+echo 📝 Setting up .gitignore...
+(
+    echo node_modules/
+    echo .env
+    echo .env.local
+    echo *.log
+    echo .DS_Store
+    echo deploy-to-gh-pages.sh
+    echo deploy-to-gh-pages.bat
+    echo quilt-deploy-*/
+) > .gitignore
 
 REM Stage and commit
 echo 📦 Staging changes...

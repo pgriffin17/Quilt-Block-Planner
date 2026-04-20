@@ -14,6 +14,12 @@ if [ ! -d .git ]; then
     exit 1
 fi
 
+# Check if backend/public exists
+if [ ! -d backend/public ]; then
+    echo "❌ Error: backend/public directory not found"
+    exit 1
+fi
+
 # Save current branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "📌 Current branch: $CURRENT_BRANCH"
@@ -32,25 +38,22 @@ fi
 echo "🔄 Switching to gh-pages branch..."
 git checkout gh-pages
 
-# Remove old files (keep .git and .gitignore)
-echo "🗑️  Clearing old files..."
-find . -maxdepth 1 -type f ! -name .gitignore | xargs rm -f
-find . -maxdepth 1 -type d ! -name .git ! -name . | xargs rm -rf
-
-# Copy new files from backend/public
+# Copy files from backend/public (preserves existing files via .gitignore)
 echo "📋 Copying files from backend/public/..."
-cp -r $CURRENT_BRANCH/backend/public/* .
+cp -r backend/public/* .
 
-# Create .gitignore for gh-pages if it doesn't exist
-if [ ! -f .gitignore ]; then
-    cat > .gitignore << EOF
+# Create .gitignore with exclusions for deployment files
+echo "📝 Setting up .gitignore..."
+cat > .gitignore << EOF
 node_modules/
 .env
 .env.local
 *.log
 .DS_Store
+deploy-to-gh-pages.sh
+deploy-to-gh-pages.bat
+quilt-deploy-*/
 EOF
-fi
 
 # Stage and commit
 echo "📦 Staging changes..."
@@ -74,4 +77,5 @@ git checkout $CURRENT_BRANCH
 
 echo ""
 echo "🎉 Deployment complete!"
-echo "📍 Your site will be available at: https://$(git config --get remote.origin.url | sed 's/.*:\(.*\)\.git/\1/' | sed 's/\///')/Quilt-Block-Planner"
+echo ""
+
