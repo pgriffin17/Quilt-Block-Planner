@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quilt Block Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Quilt Block Planner</h1>
+      <p>Design quilt blocks and export as SVG for use in Inkscape</p>
+    </header>
+
+    <main>
+      <div class="left-panel">
+        <div id="svgContainer" class="svg-container"></div>
+      </div>
+
+      <div class="right-panel">
+        <section class="control-section">
+          <h3>Block Control</h3>
+          <button id="newButton" class="btn btn-primary">New Block</button>
+          <button id="undoButton" class="btn" disabled>Undo</button>
+          <button id="redoButton" class="btn" disabled>Redo</button>
+        </section>
+
+        <section class="control-section">
+          <h3>Grid Settings</h3>
+          <div class="control-group">
+            <label for="rowSlider">Grid Size:</label>
+            <input id="rowSlider" type="range" min="2" max="20" value="6">
+            <span id="gridSizeDisplay">6×6</span>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <h3>Colors</h3>
+          <div class="control-group">
+            <label for="primaryColor">Square Color:</label>
+            <input type="color" id="primaryColor" value="#ff0000">
+          </div>
+          <div class="control-group">
+            <label for="secondaryColor">Triangle Color:</label>
+            <input type="color" id="secondaryColor" value="#00ff00">
+          </div>
+        </section>
+
+        <section class="control-section">
+          <h3>Tools</h3>
+          <div class="control-group">
+            <label for="triangleRemoval">
+              <input type="checkbox" id="triangleRemoval" name="triangleRemoval">
+              Remove Triangle Mode
+            </label>
+          </div>
+          <button id="toggleGridButton" class="btn">Toggle Grid</button>
+        </section>
+
+        <section class="control-section">
+          <h3>Block Operations</h3>
+          <div class="control-group">
+            <label for="blockName">Block Name:</label>
+            <input type="text" id="blockName" placeholder="My Quilt Block">
+          </div>
+          <div class="control-group">
+            <label for="blockDescription">Description:</label>
+            <textarea id="blockDescription" placeholder="Optional description" rows="3"></textarea>
+          </div>
+          <button id="saveButton" class="btn btn-success">Save Block</button>
+          <button id="loadButton" class="btn btn-info">Load Block</button>
+        </section>
+
+        <section class="control-section">
+          <h3>Import/Export</h3>
+          <button id="importButton" class="btn">Import SVG</button>
+          <button id="exportButton" class="btn">Export SVG</button>
+          <input type="file" id="importFile" accept=".svg" style="display: none;">
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div id="loadBlockModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Load Block</h2>
+      <div id="blockListContainer" class="block-list">
+        <p>Loading blocks...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.min.js"></script>
+  
+  <script src="js/apiClient.js"></script>
+  <script src="js/undoRedo.js"></script>
+  <script src="js/svgExporter.js"></script>
+  <script src="js/svgImporter.js"></script>
+  <script src="js/blockEditor.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
