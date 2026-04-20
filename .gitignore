@@ -3,10 +3,6 @@ node_modules/
 .env.local
 *.log
 .DS_Store
-
-# Deployment scripts - only needed on main branch
 deploy-to-gh-pages.sh
 deploy-to-gh-pages.bat
-
-# Temporary deployment directories
 quilt-deploy-*/
