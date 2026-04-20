@@ -26,9 +26,10 @@ echo "📌 Current branch: $CURRENT_BRANCH"
 
 # Save absolute path to source before any navigation
 SOURCE_PATH="$(pwd)/backend/public"
+REPO_DIR=$(pwd)
 echo "📝 Source path: $SOURCE_PATH"
 
-# Create temp directory in parent using pushd
+# Copy files to temporary directory
 echo "📋 Copying files to temporary directory..."
 pushd .. > /dev/null
 rm -rf pages-temp
@@ -41,27 +42,31 @@ if ! git rev-parse --verify gh-pages > /dev/null 2>&1; then
     git checkout --orphan gh-pages
     git rm -rf .
     git commit --allow-empty -m "Initial gh-pages branch"
-else
-    echo "✅ gh-pages branch exists"
+    git checkout $CURRENT_BRANCH
 fi
+echo "✅ gh-pages branch exists"
 
-# Switch to gh-pages
-echo "🔄 Switching to gh-pages branch..."
-git checkout gh-pages
-
-# Copy files from temp directory to gh-pages working directory
-echo "📋 Copying files from temp directory to gh-pages..."
-cp -r ../pages-temp/* .
-
-# Clean up temp directory
-echo "🧹 Cleaning up temporary directory..."
+# Use git worktree to avoid switching branches
+echo "🔄 Creating worktree for gh-pages..."
 pushd .. > /dev/null
-rm -rf pages-temp
+rm -rf pages-worktree
+git worktree add pages-worktree gh-pages
 popd > /dev/null
 
-# Create .gitignore with exclusions for deployment files
-echo "📝 Setting up .gitignore..."
-cat > .gitignore << EOF
+# Copy files into the worktree
+echo "📋 Copying files into gh-pages worktree..."
+cp -r ../pages-temp/* ../pages-worktree/
+
+# Stage changes in worktree
+echo "📦 Staging changes in gh-pages..."
+pushd ../pages-worktree > /dev/null
+git add -A
+
+# Check if there are changes to commit
+if ! git diff --cached --quiet; then
+    # Create .gitignore
+    echo "📝 Setting up .gitignore..."
+    cat > .gitignore << EOF
 node_modules/
 .env
 .env.local
@@ -71,26 +76,28 @@ deploy-to-gh-pages.sh
 deploy-to-gh-pages.bat
 quilt-deploy-*/
 EOF
-
-# Stage and commit
-echo "📦 Staging changes..."
-git add -A
-
-# Check if there are changes to commit
-if git diff --cached --quiet; then
-    echo "ℹ️  No changes to commit"
-else
+    
+    git add -A
+    
     echo "💾 Committing changes..."
     git commit -m "Deploy: Update GitHub Pages from backend/public"
     
     echo "🚀 Pushing to origin gh-pages..."
     git push origin gh-pages
     echo "✅ Successfully deployed to GitHub Pages!"
+else
+    echo "ℹ️  No changes to commit"
 fi
 
-# Return to original branch
-echo "🔄 Returning to $CURRENT_BRANCH branch..."
-git checkout $CURRENT_BRANCH
+popd > /dev/null
+
+# Clean up
+echo "🧹 Cleaning up..."
+cd "$REPO_DIR"
+pushd .. > /dev/null
+git worktree remove pages-worktree
+rm -rf pages-temp
+popd > /dev/null
 
 echo ""
 echo "🎉 Deployment complete!"

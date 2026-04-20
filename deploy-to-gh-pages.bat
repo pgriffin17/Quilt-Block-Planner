@@ -28,9 +28,10 @@ echo 📌 Current branch: !CURRENT_BRANCH!
 
 REM Save absolute path to source before any navigation
 set SOURCE_PATH=%cd%\backend\public
+set REPO_DIR=%cd%
 echo 📝 Source path: !SOURCE_PATH!
 
-REM Create temp directory in parent using PUSHD
+REM Copy files to temporary directory
 echo 📋 Copying files to temporary directory...
 pushd ..
 if exist pages-temp rmdir /s /q pages-temp
@@ -44,44 +45,44 @@ if errorlevel 1 (
     git checkout --orphan gh-pages
     git rm -rf .
     git commit --allow-empty -m "Initial gh-pages branch"
-) else (
-    echo ✅ gh-pages branch exists
+    git checkout !CURRENT_BRANCH!
 )
+echo ✅ gh-pages branch exists
 
-REM Switch to gh-pages
-echo 🔄 Switching to gh-pages branch...
-git checkout gh-pages
-
-REM Copy from temp directory to gh-pages working directory
-echo 📋 Copying files from temp directory to gh-pages...
-xcopy /E /I /Y "..\pages-temp\*" "."
-
-REM Clean up temp directory
-echo 🧹 Cleaning up temporary directory...
+REM Use git worktree to avoid switching branches
+echo 🔄 Creating worktree for gh-pages...
 pushd ..
-if exist pages-temp rmdir /s /q pages-temp
+if exist pages-worktree rmdir /s /q pages-worktree
+git worktree add pages-worktree gh-pages
 popd
 
-REM Create .gitignore
-echo 📝 Setting up .gitignore...
-(
-    echo node_modules/
-    echo .env
-    echo .env.local
-    echo *.log
-    echo .DS_Store
-    echo deploy-to-gh-pages.sh
-    echo deploy-to-gh-pages.bat
-    echo quilt-deploy-*/
-) > .gitignore
+REM Copy files into the worktree
+echo 📋 Copying files into gh-pages worktree...
+xcopy /E /I /Y "..\pages-temp\*" "..\pages-worktree\"
 
-REM Stage and commit
-echo 📦 Staging changes...
+REM Stage changes in worktree
+echo 📦 Staging changes in gh-pages...
+pushd ..\pages-worktree
 git add -A
 
 REM Check if there are changes to commit
 git diff --cached --quiet
 if errorlevel 1 (
+    REM Create .gitignore
+    echo 📝 Setting up .gitignore...
+    (
+        echo node_modules/
+        echo .env
+        echo .env.local
+        echo *.log
+        echo .DS_Store
+        echo deploy-to-gh-pages.sh
+        echo deploy-to-gh-pages.bat
+        echo quilt-deploy-*/
+    ) > .gitignore
+    
+    git add -A
+    
     echo 💾 Committing changes...
     git commit -m "Deploy: Update GitHub Pages from backend/public"
     
@@ -92,9 +93,15 @@ if errorlevel 1 (
     echo ℹ️  No changes to commit
 )
 
-REM Return to original branch
-echo 🔄 Returning to !CURRENT_BRANCH! branch...
-git checkout !CURRENT_BRANCH!
+popd
+
+REM Clean up
+echo 🧹 Cleaning up...
+cd /d "%REPO_DIR%"
+pushd ..
+git worktree remove pages-worktree
+if exist pages-temp rmdir /s /q pages-temp
+popd
 
 echo.
 echo 🎉 Deployment complete!
