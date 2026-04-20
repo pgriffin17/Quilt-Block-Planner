@@ -24,7 +24,18 @@ if not exist backend\public (
 
 REM Get current branch
 for /f "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD') do set CURRENT_BRANCH=%%i
-echo 📌 Current branch: %CURRENT_BRANCH%
+echo 📌 Current branch: !CURRENT_BRANCH!
+
+REM Save absolute path to source before any navigation
+set SOURCE_PATH=%cd%\backend\public
+echo 📝 Source path: !SOURCE_PATH!
+
+REM Create temp directory in parent using PUSHD
+echo 📋 Copying files to temporary directory...
+pushd ..
+if exist pages-temp rmdir /s /q pages-temp
+xcopy /E /I /Y "!SOURCE_PATH!\*" "pages-temp\"
+popd
 
 REM Check if gh-pages branch exists
 git rev-parse --verify gh-pages >nul 2>&1
@@ -41,9 +52,15 @@ REM Switch to gh-pages
 echo 🔄 Switching to gh-pages branch...
 git checkout gh-pages
 
-REM Copy files from backend/public (xcopy preserves existing files)
-echo 📋 Copying files from backend/public/...
-xcopy /E /I /Y "%CURRENT_BRANCH%\backend\public\*" "."
+REM Copy from temp directory to gh-pages working directory
+echo 📋 Copying files from temp directory to gh-pages...
+xcopy /E /I /Y "..\pages-temp\*" "."
+
+REM Clean up temp directory
+echo 🧹 Cleaning up temporary directory...
+pushd ..
+if exist pages-temp rmdir /s /q pages-temp
+popd
 
 REM Create .gitignore
 echo 📝 Setting up .gitignore...
@@ -76,8 +93,8 @@ if errorlevel 1 (
 )
 
 REM Return to original branch
-echo 🔄 Returning to %CURRENT_BRANCH% branch...
-git checkout %CURRENT_BRANCH%
+echo 🔄 Returning to !CURRENT_BRANCH! branch...
+git checkout !CURRENT_BRANCH!
 
 echo.
 echo 🎉 Deployment complete!

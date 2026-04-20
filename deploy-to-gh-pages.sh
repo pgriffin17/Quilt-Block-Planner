@@ -24,6 +24,17 @@ fi
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "📌 Current branch: $CURRENT_BRANCH"
 
+# Save absolute path to source before any navigation
+SOURCE_PATH="$(pwd)/backend/public"
+echo "📝 Source path: $SOURCE_PATH"
+
+# Create temp directory in parent using pushd
+echo "📋 Copying files to temporary directory..."
+pushd .. > /dev/null
+rm -rf pages-temp
+cp -r "$SOURCE_PATH" pages-temp
+popd > /dev/null
+
 # Check if gh-pages branch exists
 if ! git rev-parse --verify gh-pages > /dev/null 2>&1; then
     echo "📝 Creating gh-pages branch..."
@@ -38,9 +49,15 @@ fi
 echo "🔄 Switching to gh-pages branch..."
 git checkout gh-pages
 
-# Copy files from backend/public (preserves existing files via .gitignore)
-echo "📋 Copying files from backend/public/..."
-cp -r backend/public/* .
+# Copy files from temp directory to gh-pages working directory
+echo "📋 Copying files from temp directory to gh-pages..."
+cp -r ../pages-temp/* .
+
+# Clean up temp directory
+echo "🧹 Cleaning up temporary directory..."
+pushd .. > /dev/null
+rm -rf pages-temp
+popd > /dev/null
 
 # Create .gitignore with exclusions for deployment files
 echo "📝 Setting up .gitignore..."
