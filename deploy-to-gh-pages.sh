@@ -31,10 +31,9 @@ echo "📝 Source path: $SOURCE_PATH"
 
 # Copy files to temporary directory
 echo "📋 Copying files to temporary directory..."
-pushd .. > /dev/null
-rm -rf pages-temp
-cp -r "$SOURCE_PATH" pages-temp
-popd > /dev/null
+TEMP_DIR="$REPO_DIR/../pages-temp"
+rm -rf "$TEMP_DIR"
+cp -r "$SOURCE_PATH" "$TEMP_DIR"
 
 # Check if gh-pages branch exists
 if ! git rev-parse --verify gh-pages > /dev/null 2>&1; then
@@ -46,20 +45,19 @@ if ! git rev-parse --verify gh-pages > /dev/null 2>&1; then
 fi
 echo "✅ gh-pages branch exists"
 
-# Use git worktree to avoid switching branches
+# Use git worktree to avoid switching branches (must run from repo)
 echo "🔄 Creating worktree for gh-pages..."
-pushd .. > /dev/null
-rm -rf pages-worktree
-git worktree add pages-worktree gh-pages
-popd > /dev/null
+WORKTREE_DIR="$REPO_DIR/../pages-worktree"
+rm -rf "$WORKTREE_DIR"
+git worktree add "$WORKTREE_DIR" gh-pages
 
 # Copy files into the worktree
 echo "📋 Copying files into gh-pages worktree..."
-cp -r ../pages-temp/* ../pages-worktree/
+cp -r "$TEMP_DIR"/* "$WORKTREE_DIR/"
 
 # Stage changes in worktree
 echo "📦 Staging changes in gh-pages..."
-pushd ../pages-worktree > /dev/null
+pushd "$WORKTREE_DIR" > /dev/null
 git add -A
 
 # Check if there are changes to commit
@@ -94,10 +92,8 @@ popd > /dev/null
 # Clean up
 echo "🧹 Cleaning up..."
 cd "$REPO_DIR"
-pushd .. > /dev/null
-git worktree remove pages-worktree
-rm -rf pages-temp
-popd > /dev/null
+git worktree remove "$WORKTREE_DIR"
+rm -rf "$TEMP_DIR"
 
 echo ""
 echo "🎉 Deployment complete!"

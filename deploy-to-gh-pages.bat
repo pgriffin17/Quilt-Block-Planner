@@ -33,10 +33,9 @@ echo 📝 Source path: !SOURCE_PATH!
 
 REM Copy files to temporary directory
 echo 📋 Copying files to temporary directory...
-pushd ..
-if exist pages-temp rmdir /s /q pages-temp
-xcopy /E /I /Y "!SOURCE_PATH!\*" "pages-temp\"
-popd
+set TEMP_DIR=%REPO_DIR%\..\pages-temp
+if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
+xcopy /E /I /Y "!SOURCE_PATH!\*" "%TEMP_DIR%\"
 
 REM Check if gh-pages branch exists
 git rev-parse --verify gh-pages >nul 2>&1
@@ -49,20 +48,19 @@ if errorlevel 1 (
 )
 echo ✅ gh-pages branch exists
 
-REM Use git worktree to avoid switching branches
+REM Use git worktree to avoid switching branches (must run from repo)
 echo 🔄 Creating worktree for gh-pages...
-pushd ..
-if exist pages-worktree rmdir /s /q pages-worktree
-git worktree add pages-worktree gh-pages
-popd
+set WORKTREE_DIR=%REPO_DIR%\..\pages-worktree
+if exist "%WORKTREE_DIR%" rmdir /s /q "%WORKTREE_DIR%"
+git worktree add "%WORKTREE_DIR%" gh-pages
 
 REM Copy files into the worktree
 echo 📋 Copying files into gh-pages worktree...
-xcopy /E /I /Y "..\pages-temp\*" "..\pages-worktree\"
+xcopy /E /I /Y "%TEMP_DIR%\*" "%WORKTREE_DIR%\"
 
 REM Stage changes in worktree
 echo 📦 Staging changes in gh-pages...
-pushd ..\pages-worktree
+pushd "%WORKTREE_DIR%"
 git add -A
 
 REM Check if there are changes to commit
@@ -98,10 +96,8 @@ popd
 REM Clean up
 echo 🧹 Cleaning up...
 cd /d "%REPO_DIR%"
-pushd ..
-git worktree remove pages-worktree
-if exist pages-temp rmdir /s /q pages-temp
-popd
+git worktree remove "%WORKTREE_DIR%"
+if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
 
 echo.
 echo 🎉 Deployment complete!
